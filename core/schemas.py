@@ -136,7 +136,7 @@ class ExplainRequest(BaseModel):
     features: CREFeatures
     prediction: float | None = None
     model_type: Literal["xgboost", "gnn"] = "xgboost"
-    top_k: int | None = None
+    top_k: int | None = Field(default=None, ge=1, le=13)
     trace_id: str | None = None
 
 

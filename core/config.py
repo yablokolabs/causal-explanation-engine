@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from typing import Any
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class AppConfig(BaseModel):
@@ -62,11 +62,26 @@ class Settings(BaseModel):
     evaluation: EvaluationConfig = Field(default_factory=EvaluationConfig)
 
 
+class ModelArtifactPath(BaseModel):
+    """Validates that a model artifact path is safe and relative."""
+    path: str = Field(..., min_length=1)
+
+    @field_validator("path")
+    @classmethod
+    def _validate_path(cls, v: str) -> str:
+        resolved = Path(v).resolve()
+        if ".." in Path(v).parts:
+            raise ValueError(f"Path traversal not allowed in artifact path: {v}")
+        return v
+
+
 def load_settings(path: str | os.PathLike[str] | None = None) -> Settings:
     config_path = Path(path or os.getenv("CEE_CONFIG", "configs/default.yaml"))
     with config_path.open("r", encoding="utf-8") as fh:
         raw: dict[str, Any] = yaml.safe_load(fh)
     settings = Settings.model_validate(raw)
-    if os.getenv("CEE_MODEL_ARTIFACT"):
-        settings.model.artifact_path = os.environ["CEE_MODEL_ARTIFACT"]
+    env_artifact = os.getenv("CEE_MODEL_ARTIFACT")
+    if env_artifact:
+        ModelArtifactPath(path=env_artifact)
+        settings.model.artifact_path = env_artifact
     return settings

@@ -67,7 +67,13 @@ class CausalInferenceLayer:
         self.bootstrap_samples = bootstrap_samples
         self.x, self.y, self.feature_order = generate_cre_dataset(n=3200, seed=99)
         self.index = {name: i for i, name in enumerate(self.feature_order)}
-        self._effect_cache = {feature: self._adjusted_effect(feature) for feature in self.feature_order}
+        self._effect_cache: dict[str, tuple[float, float, float]] = {}
+
+    def _get_effect(self, feature: str) -> tuple[float, float, float]:
+        """Return cached adjusted-effect estimate, computing lazily."""
+        if feature not in self._effect_cache:
+            self._effect_cache[feature] = self._adjusted_effect(feature)
+        return self._effect_cache[feature]
 
     def estimate(self, attribution: AttributionResult, features: dict[str, float]) -> CausalResult:
         effects: list[CausalEffect] = []
@@ -77,7 +83,7 @@ class CausalInferenceLayer:
         for item in attribution.top_k:
             feature = item.feature
             status = CausalStatus.causal if (feature, OUTCOME) in edge_set else CausalStatus.correlated
-            estimate, lo, hi = self._effect_cache[feature]
+            estimate, lo, hi = self._get_effect(feature)
             if status == CausalStatus.causal and abs(estimate) >= self.min_abs_effect:
                 causal_drivers.append(feature)
             else:

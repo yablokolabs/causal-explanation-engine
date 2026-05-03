@@ -2,6 +2,31 @@ from __future__ import annotations
 
 from core.schemas import EnrichedContext
 
+# Stress index weights and normalization reference values
+_STRESS_WEIGHT_IR = 0.38
+_STRESS_WEIGHT_UNEMPLOYMENT = 0.27
+_STRESS_WEIGHT_SUPPLY = 0.20
+_STRESS_WEIGHT_LIQUIDITY = 0.15
+_IR_NORM_REF = 0.08
+_UNEMPLOYMENT_NORM_REF = 0.10
+
+# Cycle thresholds
+_STRESS_THRESHOLD = 0.78
+_SOFTENING_THRESHOLD = 0.58
+_EXPANSION_POP_MIN = 0.018
+_EXPANSION_LIQUIDITY_MIN = 0.62
+
+# Market classification thresholds
+_URBAN_CORE_TRANSIT_MIN = 70
+_SUBURBAN_TRANSIT_MIN = 40
+_LOW_CRIME_MAX = 22
+_MODERATE_CRIME_MAX = 45
+
+# Regime thresholds
+_HIGH_IR_THRESHOLD = 0.06
+_WEAK_LABOR_THRESHOLD = 0.065
+_HIGH_SUPPLY_THRESHOLD = 0.08
+
 
 class ContextualDataEnrichmentLayer:
     """Deterministic external/synthetic context enrichment.
@@ -20,18 +45,23 @@ class ContextualDataEnrichmentLayer:
         transit = features["transit_score"]
         crime = features["crime_rate"]
 
-        stress_index = 0.38 * (ir / 0.08) + 0.27 * (unemployment / 0.10) + 0.2 * supply + 0.15 * (1 - liquidity)
-        if stress_index > 0.78:
+        stress_index = (
+            _STRESS_WEIGHT_IR * (ir / _IR_NORM_REF)
+            + _STRESS_WEIGHT_UNEMPLOYMENT * (unemployment / _UNEMPLOYMENT_NORM_REF)
+            + _STRESS_WEIGHT_SUPPLY * supply
+            + _STRESS_WEIGHT_LIQUIDITY * (1 - liquidity)
+        )
+        if stress_index > _STRESS_THRESHOLD:
             cycle = "stress"
-        elif stress_index > 0.58:
+        elif stress_index > _SOFTENING_THRESHOLD:
             cycle = "softening"
-        elif pop > 0.018 and liquidity > 0.62:
+        elif pop > _EXPANSION_POP_MIN and liquidity > _EXPANSION_LIQUIDITY_MIN:
             cycle = "expansion"
         else:
             cycle = "stable"
 
-        market = "urban-core" if transit >= 70 else "suburban" if transit >= 40 else "exurban"
-        location_summary = "strong access" if transit >= 70 and crime < 22 else "mixed access/risk" if crime < 45 else "elevated location risk"
+        market = "urban-core" if transit >= _URBAN_CORE_TRANSIT_MIN else "suburban" if transit >= _SUBURBAN_TRANSIT_MIN else "exurban"
+        location_summary = "strong access" if transit >= _URBAN_CORE_TRANSIT_MIN and crime < _LOW_CRIME_MAX else "mixed access/risk" if crime < _MODERATE_CRIME_MAX else "elevated location risk"
         macro_summary = f"{cycle} market with interest_rate={ir:.3f}, unemployment_rate={unemployment:.3f}, liquidity={liquidity:.2f}."
         return EnrichedContext(
             market=market,
@@ -40,9 +70,9 @@ class ContextualDataEnrichmentLayer:
             location_summary=location_summary,
             signals={
                 "stress_index": round(float(stress_index), 4),
-                "interest_rate_regime": "high" if ir >= 0.06 else "normal",
-                "labor_market": "weak" if unemployment >= 0.065 else "normal",
-                "supply_pressure": "high" if supply >= 0.08 else "normal",
+                "interest_rate_regime": "high" if ir >= _HIGH_IR_THRESHOLD else "normal",
+                "labor_market": "weak" if unemployment >= _WEAK_LABOR_THRESHOLD else "normal",
+                "supply_pressure": "high" if supply >= _HIGH_SUPPLY_THRESHOLD else "normal",
                 "location_summary": location_summary,
             },
         )

@@ -2,16 +2,16 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
+import logging
 from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from core.config import load_settings
 from core.logging import configure_logging
 from core.pipeline import CausalExplanationEngine
 from core.schemas import CREFeatures, ExplainRequest, RegressionMetrics
 from core.synthetic import generate_cre_dataset, feature_dict, write_golden
+
+logger = logging.getLogger(__name__)
 
 
 def run(n: int, seed: int, golden_path: Path | None = None) -> RegressionMetrics:
@@ -26,6 +26,8 @@ def run(n: int, seed: int, golden_path: Path | None = None) -> RegressionMetrics
     alignment = []
     failures = 0
     for i in range(n):
+        if (i + 1) % 100 == 0 or i == n - 1:
+            logger.warning("regression progress: %d / %d", i + 1, n)
         features = CREFeatures.model_validate(feature_dict(x[i], order))
         explanation = engine.explain(ExplainRequest(features=features, trace_id=f"regression-{i:04d}"))
         validation = engine.validate(explanation)

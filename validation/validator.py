@@ -13,7 +13,7 @@ class DeterministicValidationLayer:
         diagnostics: list[ValidationDiagnostic] = []
         attr = explanation.attribution
         recomposed = attr.base_value + sum(i.contribution for i in attr.all_attributions)
-        shap_ok = abs(recomposed - attr.prediction) <= self.shap_tolerance or abs(attr.residual) <= self.shap_tolerance
+        shap_ok = abs(recomposed - attr.prediction) <= self.shap_tolerance
         if not shap_ok:
             diagnostics.append(ValidationDiagnostic(code="SHAP_RECOMPOSITION", message=f"Attributions recomposed to {recomposed:.6f}, prediction {attr.prediction:.6f}.", severity="error"))
 

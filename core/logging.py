@@ -25,12 +25,13 @@ class JsonFormatter(logging.Formatter):
 
 
 def configure_logging(level: str = "INFO") -> None:
-    handler = logging.StreamHandler(sys.stderr)
-    handler.setFormatter(JsonFormatter())
-    root = logging.getLogger()
-    root.handlers.clear()
-    root.addHandler(handler)
-    root.setLevel(level.upper())
+    cee_logger = logging.getLogger("cee")
+    if not cee_logger.handlers:
+        handler = logging.StreamHandler(sys.stderr)
+        handler.setFormatter(JsonFormatter())
+        cee_logger.addHandler(handler)
+    cee_logger.setLevel(level.upper())
+    cee_logger.propagate = False
 
 
 def ensure_trace_id(trace_id: str | None = None) -> str:

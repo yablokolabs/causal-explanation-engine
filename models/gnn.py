@@ -9,7 +9,9 @@ class GNNPlaceholderModel:
     this backend until an artifact is configured, avoiding fake predictions.
     """
 
-    feature_order: list[str] = []
+    def __init__(self) -> None:
+        self.feature_order: list[str] = []
+
     model_version = "gnn-placeholder-unconfigured"
 
     def predict_one(self, features: dict[str, float]) -> float:

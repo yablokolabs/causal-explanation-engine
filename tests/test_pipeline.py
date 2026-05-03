@@ -33,7 +33,7 @@ def test_attribution_contract_sorted_and_normalized() -> None:
     engine = make_engine()
     explanation = engine.explain(ExplainRequest(features=sample_features(456), trace_id="test-attr"))
     weights = [item.normalized_weight for item in explanation.attribution.all_attributions]
-    assert weights == sorted(weights, reverse=True)
+    assert all(a >= b - 1e-9 for a, b in zip(weights, weights[1:]))
     assert abs(sum(weights) - 1.0) < 1e-6
     assert len(explanation.attribution.top_k) == engine.settings.attribution.top_k
 

@@ -17,16 +17,31 @@ dependencies = [
   "scikit-learn>=1.4",
   "xgboost>=2",
   "shap>=0.45",
+  "joblib>=1.3",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "httpx>=0.27"]
+dev = ["pytest>=8", "httpx>=0.27", "ruff>=0.4", "mypy>=1.10"]
 causal = ["dowhy>=0.11", "econml>=0.15", "causalnex>=0.12"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-q"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "PLW"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
 
 [tool.setuptools]
 packages = ["api", "causal", "core", "llm", "models", "retrieval", "validation"]

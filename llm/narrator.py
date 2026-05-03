@@ -66,7 +66,7 @@ class ConstrainedNarrationLayer:
         claims.append(
             ExplanationClaim(
                 claim=context_sentence,
-                supported_by_fact_ids=[f.fact_id for f in retrieved.facts if f.relationship in {"context", "constraint", "definition"}][:1] or ["cre-014"],
+                supported_by_fact_ids=[f.fact_id for f in retrieved.facts if f.relationship in {"context", "constraint", "definition"}][:1],
                 features=[],
                 causal_status=CausalStatus.constrained,
             )

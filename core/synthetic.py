@@ -85,7 +85,7 @@ def generate_cre_dataset(n: int = 2500, seed: int = 42) -> tuple[np.ndarray, np.
 
 def feature_dict(row: Iterable[float], feature_order: list[str] | None = None) -> dict[str, float]:
     order = feature_order or FEATURE_ORDER
-    return {name: float(value) for name, value in zip(order, row)}
+    return {name: float(value) for name, value in zip(order, row, strict=True)}
 
 
 def write_golden(path: str | Path, n: int = 1000, seed: int = 7) -> Path:
