@@ -1,0 +1,38 @@
+{
+  "prediction": {
+    "prediction": 126.5452651977539,
+    "model_type": "xgboost",
+    "model_version": "xgboost-cre-v1",
+    "feature_order": [
+      "cap_rate",
+      "occupancy_rate",
+      "noi_growth",
+      "interest_rate",
+      "unemployment_rate",
+      "population_growth",
+      "transit_score",
+      "crime_rate",
+      "property_age",
+      "lease_term_months",
+      "market_liquidity",
+      "supply_pipeline",
+      "submarket_score"
+    ],
+    "trace_id": "example-run"
+  },
+  "explanation_text": "Prediction: 126.55. The explanation is limited to the top model attributions, causal graph links, and retrieved CRE evidence.\nnoi_growth increases the model output by 6.949 (31.5% of absolute attribution) and is treated as a causal driver. Estimated CATE is 290.369 with interval [273.050, 316.132]. Evidence: cre-003, cre-012.\ncap_rate increases the model output by 5.975 (27.0% of absolute attribution) and is treated as a causal driver. Estimated CATE is -518.581 with interval [-557.043, -486.226]. Evidence: cre-001.\nsubmarket_score decreases the model output by -2.843 (12.9% of absolute attribution) and is treated as a causal driver. Estimated CATE is 0.221 with interval [0.165, 0.273]. Evidence: cre-013.\nunemployment_rate decreases the model output by -1.637 (7.4% of absolute attribution) and is treated as a causal driver. Estimated CATE is -170.879 with interval [-196.254, -139.065]. Evidence: cre-005.\noccupancy_rate decreases the model output by -1.389 (6.3% of absolute attribution) and is treated as a causal driver. Estimated CATE is 46.838 with interval [39.779, 54.046]. Evidence: cre-002, cre-005, cre-012.\nContext: expansion market with interest_rate=0.049, unemployment_rate=0.060, liquidity=0.62. Location is mixed access/risk in a suburban market.",
+  "validation": {
+    "passed": true,
+    "hallucination_rate": 0.0,
+    "factual_consistency": 1.0,
+    "causal_alignment_score": 1.0,
+    "diagnostics": [
+      {
+        "code": "PASS",
+        "message": "Explanation passed deterministic validation.",
+        "severity": "info"
+      }
+    ],
+    "trace_id": "example-run"
+  }
+}

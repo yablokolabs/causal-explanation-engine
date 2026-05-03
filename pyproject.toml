@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "causal-explanation-engine"
+version = "0.1.0"
+description = "Grounded causal explanations for CRE model predictions"
+requires-python = ">=3.10"
+dependencies = [
+  "fastapi>=0.111",
+  "uvicorn>=0.30",
+  "pydantic>=2",
+  "PyYAML>=6",
+  "networkx>=3",
+  "numpy>=1.26",
+  "scikit-learn>=1.4",
+  "xgboost>=2",
+  "shap>=0.45",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "httpx>=0.27"]
+causal = ["dowhy>=0.11", "econml>=0.15", "causalnex>=0.12"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"
+
+[tool.setuptools]
+packages = ["api", "causal", "core", "llm", "models", "retrieval", "validation"]

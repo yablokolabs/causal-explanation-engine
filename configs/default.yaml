@@ -1,0 +1,41 @@
+app:
+  name: causal-explanation-engine
+  environment: local
+  log_level: INFO
+model:
+  backend: xgboost
+  artifact_path: artifacts/xgb_cre.json
+  feature_order:
+    - cap_rate
+    - occupancy_rate
+    - noi_growth
+    - interest_rate
+    - unemployment_rate
+    - population_growth
+    - transit_score
+    - crime_rate
+    - property_age
+    - lease_term_months
+    - market_liquidity
+    - supply_pipeline
+    - submarket_score
+attribution:
+  top_k: 5
+  method: shap_tree_with_ablation_fallback
+causal:
+  min_abs_effect: 0.01
+  bootstrap_samples: 64
+retrieval:
+  top_k: 6
+  lexical_weight: 0.55
+  graph_weight: 0.45
+llm:
+  mode: deterministic_constrained
+  max_claims: 8
+validation:
+  max_unsupported_claims: 0
+  min_causal_alignment_score: 0.75
+  shap_tolerance: 1.0e-4
+evaluation:
+  queries: 1000
+  seed: 7
