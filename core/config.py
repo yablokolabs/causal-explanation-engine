@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-import yaml
+import yaml  # type: ignore[import-untyped]
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -77,7 +77,7 @@ class ModelArtifactPath(BaseModel):
 
 
 def load_settings(path: str | os.PathLike[str] | None = None) -> Settings:
-    config_path = Path(path or os.getenv("CEE_CONFIG", "configs/default.yaml"))
+    config_path = Path(path or os.getenv("CEE_CONFIG") or "configs/default.yaml")
     with config_path.open("r", encoding="utf-8") as fh:
         raw: dict[str, Any] = yaml.safe_load(fh)
     settings = Settings.model_validate(raw)

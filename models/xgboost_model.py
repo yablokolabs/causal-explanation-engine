@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import logging
 from pathlib import Path
-from typing import Protocol
+from typing import Any, Protocol
 
 import joblib
 import numpy as np
@@ -12,12 +12,14 @@ from core.synthetic import FEATURE_ORDER, generate_cre_dataset
 
 logger = logging.getLogger(__name__)
 
+NDArrayFloat = np.ndarray[Any, np.dtype[np.floating[Any]]]
+
 
 class PredictionModel(Protocol):
     feature_order: list[str]
     model_version: str
 
-    def predict_array(self, x: np.ndarray) -> np.ndarray: ...
+    def predict_array(self, x: NDArrayFloat) -> NDArrayFloat: ...
     def predict_one(self, features: dict[str, float]) -> float: ...
 
 
@@ -36,7 +38,7 @@ class XGBoostCREModel:
         self.artifact_path = Path(artifact_path)
         self.feature_order = feature_order or FEATURE_ORDER.copy()
         self.model_version = "xgboost-cre-v1"
-        self._model = None
+        self._model: Any = None
         self._backend = "xgboost"
 
     @property
@@ -44,7 +46,7 @@ class XGBoostCREModel:
         return self._backend
 
     @property
-    def raw_model(self):
+    def raw_model(self) -> Any:
         return self._model
 
     def ensure_loaded(self) -> XGBoostCREModel:
@@ -113,10 +115,10 @@ class XGBoostCREModel:
             self._model = joblib.load(fallback_path)
             self._backend = "sklearn_gradient_boosting_fallback"
 
-    def vectorize(self, features: dict[str, float]) -> np.ndarray:
+    def vectorize(self, features: dict[str, float]) -> NDArrayFloat:
         return np.array([[float(features[name]) for name in self.feature_order]], dtype=float)
 
-    def predict_array(self, x: np.ndarray) -> np.ndarray:
+    def predict_array(self, x: NDArrayFloat) -> NDArrayFloat:
         self.ensure_loaded()
         return np.asarray(self._model.predict(x), dtype=float)
 

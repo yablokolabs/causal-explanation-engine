@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any, Literal
 
 import numpy as np
 
@@ -9,6 +10,8 @@ from core.synthetic import generate_cre_dataset
 from models.xgboost_model import XGBoostCREModel
 
 logger = logging.getLogger(__name__)
+
+NDArrayFloat = np.ndarray[Any, np.dtype[np.floating[Any]]]
 
 
 class ShapAttributionLayer:
@@ -51,7 +54,9 @@ class ShapAttributionLayer:
             all_attributions=items,
         )
 
-    def _shap_values(self, x: np.ndarray) -> tuple[float, np.ndarray, str]:
+    def _shap_values(
+        self, x: NDArrayFloat
+    ) -> tuple[float, NDArrayFloat, str]:
         try:
             if self._explainer is None:
                 raise RuntimeError("SHAP explainer is not initialized")
@@ -70,7 +75,9 @@ class ShapAttributionLayer:
             )
             return self._ablation_values(x)
 
-    def _ablation_values(self, x: np.ndarray) -> tuple[float, np.ndarray, str]:
+    def _ablation_values(
+        self, x: NDArrayFloat
+    ) -> tuple[float, NDArrayFloat, str]:
         baseline_x = self.baseline.reshape(1, -1)
         base_value = float(self.model.predict_array(baseline_x)[0])
         prediction = float(self.model.predict_array(x)[0])
@@ -86,13 +93,19 @@ class ShapAttributionLayer:
             contribs = contribs * (target_total / total)
         return base_value, contribs, "deterministic_ablation_shap_fallback"
 
-    def _items(self, features: dict[str, float], contribs: np.ndarray, k: int) -> list[AttributionItem]:
+    def _items(
+        self,
+        features: dict[str, float],
+        contribs: NDArrayFloat,
+        k: int,
+    ) -> list[AttributionItem]:
         abs_total = float(np.sum(np.abs(contribs))) or 1.0
         order = sorted(range(len(contribs)), key=lambda i: abs(float(contribs[i])), reverse=True)
         ranked: list[AttributionItem] = []
         for rank, idx in enumerate(order, start=1):
             feature = self.model.feature_order[idx]
             c = float(contribs[idx])
+            direction: Literal["increases", "decreases", "neutral"]
             if c > 1e-9:
                 direction = "increases"
             elif c < -1e-9:

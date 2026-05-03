@@ -3,8 +3,11 @@ from __future__ import annotations
 import json
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Any
 
 import numpy as np
+
+NDArrayFloat = np.ndarray[Any, np.dtype[np.floating[Any]]]
 
 FEATURE_ORDER = [
     "cap_rate",
@@ -23,7 +26,9 @@ FEATURE_ORDER = [
 ]
 
 
-def generate_cre_dataset(n: int = 2500, seed: int = 42) -> tuple[np.ndarray, np.ndarray, list[str]]:
+def generate_cre_dataset(
+    n: int = 2500, seed: int = 42
+) -> tuple[NDArrayFloat, NDArrayFloat, list[str]]:
     rng = np.random.default_rng(seed)
     cap_rate = rng.normal(0.055, 0.012, n).clip(0.025, 0.11)
     occupancy_rate = rng.normal(0.91, 0.07, n).clip(0.55, 0.995)

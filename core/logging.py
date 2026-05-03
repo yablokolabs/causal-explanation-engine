@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import sys
+from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from time import perf_counter
@@ -20,7 +21,7 @@ class JsonFormatter(logging.Formatter):
             "trace_id": trace_id_var.get(),
         }
         if hasattr(record, "extra_fields"):
-            payload.update(record.extra_fields)  # type: ignore[arg-type]
+            payload.update(record.extra_fields)  # type: ignore[arg-type,unused-ignore]
         return json.dumps(payload, sort_keys=True)
 
 
@@ -41,7 +42,7 @@ def ensure_trace_id(trace_id: str | None = None) -> str:
 
 
 @contextmanager
-def traced_span(name: str, **fields: object):
+def traced_span(name: str, **fields: object) -> Iterator[None]:
     logger = logging.getLogger("cee.trace")
     start = perf_counter()
     logger.info("span.start", extra={"extra_fields": {"span": name, **fields}})
