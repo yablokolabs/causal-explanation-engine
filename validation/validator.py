@@ -4,7 +4,9 @@ from core.schemas import CausalStatus, ExplanationResult, ValidationDiagnostic, 
 
 
 class DeterministicValidationLayer:
-    def __init__(self, shap_tolerance: float = 1e-5, min_causal_alignment_score: float = 0.75, max_unsupported_claims: int = 0):
+    def __init__(
+        self, shap_tolerance: float = 1e-5, min_causal_alignment_score: float = 0.75, max_unsupported_claims: int = 0
+    ):
         self.shap_tolerance = shap_tolerance
         self.min_causal_alignment_score = min_causal_alignment_score
         self.max_unsupported_claims = max_unsupported_claims
@@ -15,7 +17,13 @@ class DeterministicValidationLayer:
         recomposed = attr.base_value + sum(i.contribution for i in attr.all_attributions)
         shap_ok = abs(recomposed - attr.prediction) <= self.shap_tolerance
         if not shap_ok:
-            diagnostics.append(ValidationDiagnostic(code="SHAP_RECOMPOSITION", message=f"Attributions recomposed to {recomposed:.6f}, prediction {attr.prediction:.6f}.", severity="error"))
+            diagnostics.append(
+                ValidationDiagnostic(
+                    code="SHAP_RECOMPOSITION",
+                    message=f"Attributions recomposed to {recomposed:.6f}, prediction {attr.prediction:.6f}.",
+                    severity="error",
+                )
+            )
 
         fact_ids = {f.fact_id for f in explanation.retrieved.facts}
         unsupported = []
@@ -24,7 +32,13 @@ class DeterministicValidationLayer:
             if not claim.supported_by_fact_ids or missing:
                 unsupported.append(claim.claim)
         if unsupported:
-            diagnostics.append(ValidationDiagnostic(code="UNSUPPORTED_CLAIM", message=f"{len(unsupported)} claims lack retrieved evidence.", severity="error"))
+            diagnostics.append(
+                ValidationDiagnostic(
+                    code="UNSUPPORTED_CLAIM",
+                    message=f"{len(unsupported)} claims lack retrieved evidence.",
+                    severity="error",
+                )
+            )
 
         effect_by_feature = {e.treatment: e for e in explanation.causal.effects}
         aligned = 0
@@ -53,13 +67,27 @@ class DeterministicValidationLayer:
                 aligned += 1
         causal_alignment = aligned / total if total else 1.0
         if causal_alignment < self.min_causal_alignment_score:
-            diagnostics.append(ValidationDiagnostic(code="CAUSAL_ALIGNMENT", message=f"Causal alignment {causal_alignment:.3f} below threshold.", severity="error"))
+            diagnostics.append(
+                ValidationDiagnostic(
+                    code="CAUSAL_ALIGNMENT",
+                    message=f"Causal alignment {causal_alignment:.3f} below threshold.",
+                    severity="error",
+                )
+            )
 
         hallucination_rate = len(unsupported) / max(len(explanation.justification), 1)
         factual_consistency = 1.0 - hallucination_rate
-        passed = shap_ok and len(unsupported) <= self.max_unsupported_claims and causal_alignment >= self.min_causal_alignment_score
+        passed = (
+            shap_ok
+            and len(unsupported) <= self.max_unsupported_claims
+            and causal_alignment >= self.min_causal_alignment_score
+        )
         if passed:
-            diagnostics.append(ValidationDiagnostic(code="PASS", message="Explanation passed deterministic validation.", severity="info"))
+            diagnostics.append(
+                ValidationDiagnostic(
+                    code="PASS", message="Explanation passed deterministic validation.", severity="info"
+                )
+            )
         return ValidationResult(
             passed=passed,
             hallucination_rate=hallucination_rate,

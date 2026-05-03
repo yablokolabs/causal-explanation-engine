@@ -3,13 +3,13 @@ from __future__ import annotations
 import math
 import re
 from collections import Counter
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 import networkx as nx
 
-from core.schemas import RetrievedFact, RetrievalResult
 from causal.engine import CRE_CAUSAL_EDGES
+from core.schemas import RetrievalResult, RetrievedFact
 
 TOKEN_RE = re.compile(r"[a-zA-Z_]+")
 
@@ -24,20 +24,109 @@ class FactRecord:
 
 
 FACTS: tuple[FactRecord, ...] = (
-    FactRecord("cre-001", "Higher capitalization rates mechanically lower income-property value multiples when net operating income is held constant.", "CRE valuation identity", ("cap_rate",), "causal"),
-    FactRecord("cre-002", "Higher occupancy improves realized rental income and typically raises property value score.", "CRE operating fundamentals", ("occupancy_rate",), "causal"),
-    FactRecord("cre-003", "Expected NOI growth supports higher valuation because buyers underwrite future income expansion.", "CRE underwriting principle", ("noi_growth",), "causal"),
-    FactRecord("cre-004", "Higher interest rates increase financing costs and discount rates, pressuring values downward.", "Macro-finance CRE linkage", ("interest_rate",), "causal"),
-    FactRecord("cre-005", "Higher unemployment can reduce tenant demand and weaken occupancy-sensitive asset performance.", "Labor market demand channel", ("unemployment_rate", "occupancy_rate"), "causal"),
-    FactRecord("cre-006", "Population growth is a demand tailwind for many CRE sectors and can improve absorption.", "Market demand signal", ("population_growth",), "causal"),
-    FactRecord("cre-007", "Transit access can raise submarket attractiveness but must not be treated as a value driver without local evidence.", "Location accessibility constraint", ("transit_score", "submarket_score"), "constraint"),
-    FactRecord("cre-008", "Elevated crime rates can reduce submarket desirability and leasing demand.", "Location risk signal", ("crime_rate", "submarket_score"), "causal"),
-    FactRecord("cre-009", "Older properties can face higher capital expenditure needs, reducing risk-adjusted value unless offset by renovation or location quality.", "Asset condition constraint", ("property_age",), "causal"),
-    FactRecord("cre-010", "Longer weighted lease terms can stabilize cash flows and reduce near-term rollover risk.", "Lease risk principle", ("lease_term_months",), "causal"),
-    FactRecord("cre-011", "Liquid transaction markets reduce exit risk and support pricing confidence.", "Capital markets liquidity", ("market_liquidity",), "causal"),
-    FactRecord("cre-012", "A large competing supply pipeline can weaken rent growth and occupancy expectations.", "Supply-demand constraint", ("supply_pipeline", "occupancy_rate", "noi_growth"), "causal"),
-    FactRecord("cre-013", "Submarket score aggregates local demand, access, safety, and liquidity signals; component claims need supporting evidence.", "CRE schema definition", ("submarket_score", "transit_score", "crime_rate"), "definition"),
-    FactRecord("cre-014", "Narration must distinguish model attribution from causal effect: SHAP explains the model prediction, not real-world causality by itself.", "Explanation governance", tuple(), "constraint"),
+    FactRecord(
+        "cre-001",
+        "Higher capitalization rates mechanically lower income-property "
+        "value multiples when net operating income is held constant.",
+        "CRE valuation identity",
+        ("cap_rate",),
+        "causal",
+    ),
+    FactRecord(
+        "cre-002",
+        "Higher occupancy improves realized rental income and typically raises property value score.",
+        "CRE operating fundamentals",
+        ("occupancy_rate",),
+        "causal",
+    ),
+    FactRecord(
+        "cre-003",
+        "Expected NOI growth supports higher valuation because buyers underwrite future income expansion.",
+        "CRE underwriting principle",
+        ("noi_growth",),
+        "causal",
+    ),
+    FactRecord(
+        "cre-004",
+        "Higher interest rates increase financing costs and discount rates, pressuring values downward.",
+        "Macro-finance CRE linkage",
+        ("interest_rate",),
+        "causal",
+    ),
+    FactRecord(
+        "cre-005",
+        "Higher unemployment can reduce tenant demand and weaken occupancy-sensitive asset performance.",
+        "Labor market demand channel",
+        ("unemployment_rate", "occupancy_rate"),
+        "causal",
+    ),
+    FactRecord(
+        "cre-006",
+        "Population growth is a demand tailwind for many CRE sectors and can improve absorption.",
+        "Market demand signal",
+        ("population_growth",),
+        "causal",
+    ),
+    FactRecord(
+        "cre-007",
+        "Transit access can raise submarket attractiveness "
+        "but must not be treated as a value driver without local evidence.",
+        "Location accessibility constraint",
+        ("transit_score", "submarket_score"),
+        "constraint",
+    ),
+    FactRecord(
+        "cre-008",
+        "Elevated crime rates can reduce submarket desirability and leasing demand.",
+        "Location risk signal",
+        ("crime_rate", "submarket_score"),
+        "causal",
+    ),
+    FactRecord(
+        "cre-009",
+        "Older properties can face higher capital expenditure needs, "
+        "reducing risk-adjusted value unless offset by renovation or location quality.",
+        "Asset condition constraint",
+        ("property_age",),
+        "causal",
+    ),
+    FactRecord(
+        "cre-010",
+        "Longer weighted lease terms can stabilize cash flows and reduce near-term rollover risk.",
+        "Lease risk principle",
+        ("lease_term_months",),
+        "causal",
+    ),
+    FactRecord(
+        "cre-011",
+        "Liquid transaction markets reduce exit risk and support pricing confidence.",
+        "Capital markets liquidity",
+        ("market_liquidity",),
+        "causal",
+    ),
+    FactRecord(
+        "cre-012",
+        "A large competing supply pipeline can weaken rent growth and occupancy expectations.",
+        "Supply-demand constraint",
+        ("supply_pipeline", "occupancy_rate", "noi_growth"),
+        "causal",
+    ),
+    FactRecord(
+        "cre-013",
+        "Submarket score aggregates local demand, access, safety, "
+        "and liquidity signals; component claims need supporting evidence.",
+        "CRE schema definition",
+        ("submarket_score", "transit_score", "crime_rate"),
+        "definition",
+    ),
+    FactRecord(
+        "cre-014",
+        "Narration must distinguish model attribution from causal effect: "
+        "SHAP explains the model prediction, not real-world causality by itself.",
+        "Explanation governance",
+        tuple(),
+        "constraint",
+    ),
 )
 
 
@@ -97,7 +186,16 @@ class HybridKnowledgeRetriever:
         # Always include governance constraint to bound narration.
         if not any(f.fact_id == "cre-014" for f in facts):
             gov = next(f for f in self.facts if f.fact_id == "cre-014")
-            facts.append(RetrievedFact(fact_id=gov.fact_id, text=gov.text, source=gov.source, related_features=[], relationship="constraint", score=1.0))
+            facts.append(
+                RetrievedFact(
+                    fact_id=gov.fact_id,
+                    text=gov.text,
+                    source=gov.source,
+                    related_features=[],
+                    relationship="constraint",
+                    score=1.0,
+                )
+            )
         return RetrievalResult(facts=facts, query_terms=terms)
 
     def _graph_score(self, query_features: list[str], fact: FactRecord) -> float:

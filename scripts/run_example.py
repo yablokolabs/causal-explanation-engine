@@ -6,7 +6,7 @@ from core.config import load_settings
 from core.logging import configure_logging
 from core.pipeline import CausalExplanationEngine
 from core.schemas import CREFeatures, ExplainRequest, PredictionRequest
-from core.synthetic import generate_cre_dataset, feature_dict
+from core.synthetic import feature_dict, generate_cre_dataset
 
 
 def main() -> None:
@@ -16,13 +16,20 @@ def main() -> None:
     x, _, order = generate_cre_dataset(n=1, seed=123)
     features = CREFeatures.model_validate(feature_dict(x[0], order))
     prediction = engine.predict(PredictionRequest(features=features, trace_id="example-run"))
-    explanation = engine.explain(ExplainRequest(features=features, prediction=prediction.prediction, trace_id="example-run"))
+    explanation = engine.explain(
+        ExplainRequest(features=features, prediction=prediction.prediction, trace_id="example-run")
+    )
     validation = engine.validate(explanation)
-    print(json.dumps({
-        "prediction": prediction.model_dump(),
-        "explanation_text": explanation.explanation_text,
-        "validation": validation.model_dump(),
-    }, indent=2))
+    print(
+        json.dumps(
+            {
+                "prediction": prediction.model_dump(),
+                "explanation_text": explanation.explanation_text,
+                "validation": validation.model_dump(),
+            },
+            indent=2,
+        )
+    )
 
 
 if __name__ == "__main__":

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import hashlib
+
 import numpy as np
 
-from core.schemas import CausalEffect, CausalGraph, CausalResult, CausalStatus, AttributionResult
-from core.synthetic import FEATURE_ORDER, generate_cre_dataset
+from core.schemas import AttributionResult, CausalEffect, CausalGraph, CausalResult, CausalStatus
+from core.synthetic import generate_cre_dataset
 
 OUTCOME = "predicted_value_score"
 
@@ -98,11 +99,20 @@ class CausalInferenceLayer:
                     upper_bound=float(hi),
                     status=status,
                     adjustment_set=ADJUSTMENTS.get(feature, []),
-                    evidence=f"Adjusted linear CATE proxy over synthetic CRE structural data; controls={ADJUSTMENTS.get(feature, [])}.",
+                    evidence=(
+                        "Adjusted linear CATE proxy over synthetic CRE structural data; "
+                        f"controls={ADJUSTMENTS.get(feature, [])}."
+                    ),
                 )
             )
-        graph = CausalGraph(nodes=sorted({n for edge in CRE_CAUSAL_EDGES for n in edge}), edges=CRE_CAUSAL_EDGES, constraints=CONSTRAINTS)
-        return CausalResult(graph=graph, effects=effects, causal_drivers=causal_drivers, correlated_only_drivers=correlated)
+        graph = CausalGraph(
+            nodes=sorted({n for edge in CRE_CAUSAL_EDGES for n in edge}),
+            edges=CRE_CAUSAL_EDGES,
+            constraints=CONSTRAINTS,
+        )
+        return CausalResult(
+            graph=graph, effects=effects, causal_drivers=causal_drivers, correlated_only_drivers=correlated
+        )
 
     def _adjusted_effect(self, treatment: str) -> tuple[float, float, float]:
         cols = [treatment] + [c for c in ADJUSTMENTS.get(treatment, []) if c in self.index]

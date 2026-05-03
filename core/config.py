@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 from typing import Any
+
 import yaml
 from pydantic import BaseModel, Field, field_validator
 
@@ -64,12 +65,12 @@ class Settings(BaseModel):
 
 class ModelArtifactPath(BaseModel):
     """Validates that a model artifact path is safe and relative."""
+
     path: str = Field(..., min_length=1)
 
     @field_validator("path")
     @classmethod
     def _validate_path(cls, v: str) -> str:
-        resolved = Path(v).resolve()
         if ".." in Path(v).parts:
             raise ValueError(f"Path traversal not allowed in artifact path: {v}")
         return v

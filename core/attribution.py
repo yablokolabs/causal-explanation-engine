@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+
 import numpy as np
 
 from core.schemas import AttributionItem, AttributionResult
@@ -29,7 +30,10 @@ class ShapAttributionLayer:
 
             self._explainer = shap.TreeExplainer(self.model.raw_model)
         except Exception as exc:
-            logger.warning("shap explainer unavailable; ablation fallback will be used", extra={"extra_fields": {"error": str(exc)}})
+            logger.warning(
+                "shap explainer unavailable; ablation fallback will be used",
+                extra={"extra_fields": {"error": str(exc)}},
+            )
 
     def compute(self, features: dict[str, float], top_k: int | None = None) -> AttributionResult:
         k = top_k or self.top_k
@@ -61,7 +65,9 @@ class ShapAttributionLayer:
                 expected = float(np.asarray(expected).ravel()[0])
             return float(expected), contribs, "shap.TreeExplainer"
         except Exception as exc:
-            logger.warning("shap unavailable; using deterministic ablation fallback", extra={"extra_fields": {"error": str(exc)}})
+            logger.warning(
+                "shap unavailable; using deterministic ablation fallback", extra={"extra_fields": {"error": str(exc)}}
+            )
             return self._ablation_values(x)
 
     def _ablation_values(self, x: np.ndarray) -> tuple[float, np.ndarray, str]:

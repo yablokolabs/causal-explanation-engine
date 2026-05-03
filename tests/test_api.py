@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi.testclient import TestClient
 
 from api.main import app
-from core.synthetic import generate_cre_dataset, feature_dict
+from core.synthetic import feature_dict, generate_cre_dataset
 
 
 def payload() -> dict:

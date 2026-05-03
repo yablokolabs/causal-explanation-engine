@@ -47,7 +47,7 @@ class XGBoostCREModel:
     def raw_model(self):
         return self._model
 
-    def ensure_loaded(self) -> "XGBoostCREModel":
+    def ensure_loaded(self) -> XGBoostCREModel:
         if self._model is not None:
             return self
         if self.artifact_path.exists():
@@ -109,7 +109,7 @@ class XGBoostCREModel:
                     raise RuntimeError(
                         f"Artifact integrity check failed for {fallback_path}: "
                         f"expected SHA-256 {expected}, got {actual}"
-                    )
+                    ) from None
             self._model = joblib.load(fallback_path)
             self._backend = "sklearn_gradient_boosting_fallback"
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 from core.config import load_settings
 from core.pipeline import CausalExplanationEngine
 from core.schemas import CREFeatures, ExplainRequest, PredictionRequest
-from core.synthetic import generate_cre_dataset, feature_dict
+from core.synthetic import feature_dict, generate_cre_dataset
 
 
 def make_engine() -> CausalExplanationEngine:
@@ -33,7 +33,7 @@ def test_attribution_contract_sorted_and_normalized() -> None:
     engine = make_engine()
     explanation = engine.explain(ExplainRequest(features=sample_features(456), trace_id="test-attr"))
     weights = [item.normalized_weight for item in explanation.attribution.all_attributions]
-    assert all(a >= b - 1e-9 for a, b in zip(weights, weights[1:]))
+    assert all(a >= b - 1e-9 for a, b in zip(weights, weights[1:]))  # noqa: B905
     assert abs(sum(weights) - 1.0) < 1e-6
     assert len(explanation.attribution.top_k) == engine.settings.attribution.top_k
 

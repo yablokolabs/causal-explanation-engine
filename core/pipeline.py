@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+from causal.engine import CausalInferenceLayer
 from core.attribution import ShapAttributionLayer
 from core.config import Settings
 from core.enrichment import ContextualDataEnrichmentLayer
 from core.logging import ensure_trace_id, traced_span
 from core.schemas import ExplainRequest, ExplanationResult, PredictionRequest, PredictionResponse, ValidationResult
-from causal.engine import CausalInferenceLayer
 from llm.narrator import ConstrainedNarrationLayer
 from models.gnn import GNNPlaceholderModel
 from models.xgboost_model import XGBoostCREModel
@@ -22,7 +22,9 @@ class CausalExplanationEngine:
         self.gnn = GNNPlaceholderModel()
         self.attribution = ShapAttributionLayer(self.xgb, top_k=settings.attribution.top_k)
         self.causal = CausalInferenceLayer(settings.causal.min_abs_effect, settings.causal.bootstrap_samples)
-        self.retriever = HybridKnowledgeRetriever(settings.retrieval.top_k, settings.retrieval.lexical_weight, settings.retrieval.graph_weight)
+        self.retriever = HybridKnowledgeRetriever(
+            settings.retrieval.top_k, settings.retrieval.lexical_weight, settings.retrieval.graph_weight
+        )
         self.enrichment = ContextualDataEnrichmentLayer()
         self.narrator = ConstrainedNarrationLayer(settings.llm.max_claims)
         self.validator = DeterministicValidationLayer(
@@ -41,7 +43,13 @@ class CausalExplanationEngine:
             prediction = self.xgb.predict_one(features)
             version = self.xgb.model_version
             order = self.xgb.feature_order
-            return PredictionResponse(prediction=prediction, model_type=request.model_type, model_version=version, feature_order=order, trace_id=trace_id)
+            return PredictionResponse(
+                prediction=prediction,
+                model_type=request.model_type,
+                model_version=version,
+                feature_order=order,
+                trace_id=trace_id,
+            )
 
     def explain(self, request: ExplainRequest) -> ExplanationResult:
         """Generate a grounded causal explanation for a prediction.
@@ -57,7 +65,9 @@ class CausalExplanationEngine:
             causal = self.causal.estimate(attribution, features)
             context = self.enrichment.enrich(features)
             driver_features = [i.feature for i in attribution.top_k] + causal.causal_drivers
-            retrieved = self.retriever.retrieve(driver_features, [context.market, context.market_cycle, context.location_summary])
+            retrieved = self.retriever.retrieve(
+                driver_features, [context.market, context.market_cycle, context.location_summary]
+            )
             return self.narrator.narrate(attribution, causal, retrieved, context, trace_id)
 
     def validate(self, explanation: ExplanationResult) -> ValidationResult:

@@ -9,7 +9,7 @@ from core.config import load_settings
 from core.logging import configure_logging
 from core.pipeline import CausalExplanationEngine
 from core.schemas import CREFeatures, ExplainRequest, RegressionMetrics
-from core.synthetic import generate_cre_dataset, feature_dict, write_golden
+from core.synthetic import feature_dict, generate_cre_dataset, write_golden
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,9 @@ def run(n: int, seed: int, golden_path: Path | None = None) -> RegressionMetrics
         hallucination_rate=sum(hallucination) / n,
         factual_consistency=sum(factual) / n,
         causal_alignment_score=sum(alignment) / n,
-        passed=(sum(hallucination) / n) < 0.01 and (sum(factual) / n) >= 0.99 and (sum(alignment) / n) >= settings.validation.min_causal_alignment_score,
+        passed=(sum(hallucination) / n) < 0.01
+        and (sum(factual) / n) >= 0.99
+        and (sum(alignment) / n) >= settings.validation.min_causal_alignment_score,
     )
     return metrics
 

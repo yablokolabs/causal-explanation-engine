@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
+
 import numpy as np
 
 FEATURE_ORDER = [
@@ -44,21 +45,23 @@ def generate_cre_dataset(n: int = 2500, seed: int = 42) -> tuple[np.ndarray, np.
         + rng.normal(25, 8, n)
     ).clip(0, 100)
 
-    x = np.column_stack([
-        cap_rate,
-        occupancy_rate,
-        noi_growth,
-        interest_rate,
-        unemployment_rate,
-        population_growth,
-        transit_score,
-        crime_rate,
-        property_age,
-        lease_term_months,
-        market_liquidity,
-        supply_pipeline,
-        submarket_score,
-    ])
+    x = np.column_stack(
+        [
+            cap_rate,
+            occupancy_rate,
+            noi_growth,
+            interest_rate,
+            unemployment_rate,
+            population_growth,
+            transit_score,
+            crime_rate,
+            property_age,
+            lease_term_months,
+            market_liquidity,
+            supply_pipeline,
+            submarket_score,
+        ]
+    )
 
     # Value score in basis-point-like units. Formula encodes the domain causal truth used by tests.
     y = (

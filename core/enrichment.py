@@ -60,9 +60,24 @@ class ContextualDataEnrichmentLayer:
         else:
             cycle = "stable"
 
-        market = "urban-core" if transit >= _URBAN_CORE_TRANSIT_MIN else "suburban" if transit >= _SUBURBAN_TRANSIT_MIN else "exurban"
-        location_summary = "strong access" if transit >= _URBAN_CORE_TRANSIT_MIN and crime < _LOW_CRIME_MAX else "mixed access/risk" if crime < _MODERATE_CRIME_MAX else "elevated location risk"
-        macro_summary = f"{cycle} market with interest_rate={ir:.3f}, unemployment_rate={unemployment:.3f}, liquidity={liquidity:.2f}."
+        market = (
+            "urban-core"
+            if transit >= _URBAN_CORE_TRANSIT_MIN
+            else "suburban"
+            if transit >= _SUBURBAN_TRANSIT_MIN
+            else "exurban"
+        )
+        location_summary = (
+            "strong access"
+            if transit >= _URBAN_CORE_TRANSIT_MIN and crime < _LOW_CRIME_MAX
+            else "mixed access/risk"
+            if crime < _MODERATE_CRIME_MAX
+            else "elevated location risk"
+        )
+        macro_summary = (
+            f"{cycle} market with interest_rate={ir:.3f}, "
+            f"unemployment_rate={unemployment:.3f}, liquidity={liquidity:.2f}."
+        )
         return EnrichedContext(
             market=market,
             market_cycle=cycle,  # type: ignore[arg-type]

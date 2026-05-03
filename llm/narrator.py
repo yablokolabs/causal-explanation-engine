@@ -35,16 +35,25 @@ class ConstrainedNarrationLayer:
         effect_by_feature = {e.treatment: e for e in causal.effects}
         claims: list[ExplanationClaim] = []
         sentences: list[str] = [
-            f"Prediction: {attribution.prediction:.2f}. The explanation is limited to the top model attributions, causal graph links, and retrieved CRE evidence."
+            f"Prediction: {attribution.prediction:.2f}. The explanation is limited to the top "
+            f"model attributions, causal graph links, and retrieved CRE evidence."
         ]
         for item in attribution.top_k:
             effect = effect_by_feature.get(item.feature)
             status = effect.status if effect else CausalStatus.unknown
-            fact_ids = facts_by_feature.get(item.feature, []) or [f.fact_id for f in retrieved.facts if f.relationship == "constraint"][:1]
-            causal_phrase = "causal driver" if status == CausalStatus.causal else "model driver without a direct causal claim"
+            fact_ids = (
+                facts_by_feature.get(item.feature, [])
+                or [f.fact_id for f in retrieved.facts if f.relationship == "constraint"][:1]
+            )
+            causal_phrase = (
+                "causal driver" if status == CausalStatus.causal else "model driver without a direct causal claim"
+            )
             effect_phrase = ""
             if effect:
-                effect_phrase = f" Estimated {effect.effect_type} is {effect.estimate:.3f} with interval [{effect.lower_bound:.3f}, {effect.upper_bound:.3f}]."
+                effect_phrase = (
+                    f" Estimated {effect.effect_type} is {effect.estimate:.3f}"
+                    f" with interval [{effect.lower_bound:.3f}, {effect.upper_bound:.3f}]."
+                )
             sentence = (
                 f"{item.feature} {item.direction} the model output by {item.contribution:.3f} "
                 f"({item.normalized_weight:.1%} of absolute attribution) and is treated as a {causal_phrase}."
@@ -61,12 +70,16 @@ class ConstrainedNarrationLayer:
             )
             if len(claims) >= self.max_claims:
                 break
-        context_sentence = f"Context: {context.macro_summary} Location is {context.location_summary} in a {context.market} market."
+        context_sentence = (
+            f"Context: {context.macro_summary} Location is {context.location_summary} in a {context.market} market."
+        )
         sentences.append(context_sentence)
         claims.append(
             ExplanationClaim(
                 claim=context_sentence,
-                supported_by_fact_ids=[f.fact_id for f in retrieved.facts if f.relationship in {"context", "constraint", "definition"}][:1],
+                supported_by_fact_ids=[
+                    f.fact_id for f in retrieved.facts if f.relationship in {"context", "constraint", "definition"}
+                ][:1],
                 features=[],
                 causal_status=CausalStatus.constrained,
             )

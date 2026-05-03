@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import os
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,7 +10,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from core.config import load_settings
 from core.logging import configure_logging
 from core.pipeline import CausalExplanationEngine
-from core.schemas import ExplainRequest, ExplanationResult, PredictionRequest, PredictionResponse, ValidateRequest, ValidationResult
+from core.schemas import (
+    ExplainRequest,
+    ExplanationResult,
+    PredictionRequest,
+    PredictionResponse,
+    ValidateRequest,
+    ValidationResult,
+)
 
 _engine: CausalExplanationEngine | None = None
 
